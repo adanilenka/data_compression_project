@@ -24,9 +24,12 @@ namespace LZWCoding
             }
 
             Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(allText, compressed).ToString());
+            Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
+                Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());
             Console.WriteLine("Source BitRate: " + BitRate.Calculate(allText).ToString());
             Console.WriteLine("Coded BitRate: " + BitRate.Calculate(allText, compressed).ToString());
-            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
+            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(allText, compressed).ToString());
+            Console.WriteLine("Saving Percentage (File): " + SavingPercentage.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
                 Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString() + "%");
         }
 

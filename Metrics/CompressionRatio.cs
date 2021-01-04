@@ -9,7 +9,13 @@ namespace Metrics
 {
     public static class CompressionRatio
     {
-      
+        public static float CalculateFile(string sourcefileName, string codedfileName)
+        {
+            long sourceFileLength = new FileInfo(sourcefileName).Length;
+            long codedFileLength = new FileInfo(codedfileName).Length;
+            return ((float)sourceFileLength  / (float)codedFileLength);
+        }
+
         public static float Calculate(int sourceCount, int codedCount)
         {
             return ((float)sourceCount / (float)codedCount);
