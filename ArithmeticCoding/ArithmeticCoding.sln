@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArithmeticCoding", "Arithme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LZWCoding", "..\LZWCoding\LZWCoding.csproj", "{C27253D5-D850-4685-9281-44D5DFEA35EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metrics", "Metrics\Metrics.csproj", "{D2CF3073-163A-4746-BBF2-413F1C37D31F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metrics", "..\Metrics\Metrics.csproj", "{2617D42A-D71A-4B52-B633-30F416A349D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{C27253D5-D850-4685-9281-44D5DFEA35EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C27253D5-D850-4685-9281-44D5DFEA35EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C27253D5-D850-4685-9281-44D5DFEA35EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2CF3073-163A-4746-BBF2-413F1C37D31F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2CF3073-163A-4746-BBF2-413F1C37D31F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2CF3073-163A-4746-BBF2-413F1C37D31F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2CF3073-163A-4746-BBF2-413F1C37D31F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2617D42A-D71A-4B52-B633-30F416A349D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2617D42A-D71A-4B52-B633-30F416A349D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2617D42A-D71A-4B52-B633-30F416A349D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2617D42A-D71A-4B52-B633-30F416A349D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
