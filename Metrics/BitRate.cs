@@ -16,6 +16,14 @@ namespace Metrics
 
             return ((float)binSource.Length / (float)source.Length);
         }
+
+        public static float Calculate(string source, string coded)
+        {
+            var codedSource = Helpers.ConvertStringToBitString(coded);
+            return ((float)codedSource.Length / (float)source.Length);
+        }
+
+
         public static float Calculate(string source, List<int> codedArray)
         {
             var bitArray = new BitArray(codedArray.ToArray());
