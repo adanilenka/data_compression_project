@@ -11,7 +11,7 @@ namespace LZWCoding
     {
         static void Main(string[] args)
         {
-            string sourceFileName = "test2.txt";
+            string sourceFileName = "filtered_passwords.txt";
             string compressedFileName = "CompressedFile.txt";
             string decompressedFileName = "DecompressedFile.txt";
             string allText = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, sourceFileName), Encoding.Default);
@@ -109,21 +109,29 @@ namespace LZWCoding
             var w = dictionary[Convert.ToInt32(temp, 2)];
             StringBuilder decompressed = new StringBuilder(w);
             int countBitRead = 8;
-            while (binaryStr.Length >=8) 
+            while (binaryStr.Length >= countBitRead) 
             {
-                if((Math.Ceiling(Math.Log(dictionary.Count, 2)) == Math.Log(dictionary.Count, 2)))
+                if((Math.Ceiling(Math.Log(dictionary.Count, 2)) == Math.Log(dictionary.Count, 2)&&dictionary.Count<4096))
                 {
                     countBitRead++;
                 }
                 temp= binaryStr.Substring(0, countBitRead);
                 binaryStr = binaryStr.Substring(countBitRead, binaryStr.Length - countBitRead);
-                string c = dictionary[Convert.ToInt32(temp, 2)];
-                decompressed.Append(c);
-                w += c[0];
-                if (!dictionary.Any(x => x.Value.Equals(w))){
-                    dictionary[dictionary.Count] = w;
-                    w=c;
+                string entry = null;
+                if (dictionary.ContainsKey(Convert.ToInt32(temp, 2))){
+                    entry = dictionary[Convert.ToInt32(temp, 2)];
                 }
+                else
+                {
+                    entry = w + w[0];
+                }
+
+                decompressed.Append(entry);
+                if (dictionary.Count < 4096)
+                {
+                    dictionary[dictionary.Count] = w + entry[0];
+                }
+                w = entry;
 
             }
 
