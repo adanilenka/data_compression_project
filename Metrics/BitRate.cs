@@ -30,11 +30,18 @@ namespace Metrics
             return ((float)bitArray.Length / (float)source.Length);
         }
 
+
         public static float Calculate(string source, BitArray bitArray)
         {
             return ((float)bitArray.Length / (float)source.Length);
         }
 
-  
+        public static float Calculate(int sourceLength, int compressedLength)
+        {
+            return ((float)compressedLength / (float)sourceLength);
+        }
+
+      
+
     }
 }

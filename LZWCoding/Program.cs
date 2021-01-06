@@ -11,46 +11,55 @@ namespace LZWCoding
     {
         static void Main(string[] args)
         {
-            string allText = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "Test.txt"), Encoding.Default);
+            string sourceFileName = "test2.txt";
+            string compressedFileName = "CompressedFile.txt";
+            string decompressedFileName = "DecompressedFile.txt";
+            string allText = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, sourceFileName), Encoding.Default);
 
-            (List<char> alphabet, List<int> compressed) = Compress(allText);
-            string decompressed = Decompress(compressed, alphabet);
-            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")))
+            string compressed = Compress(allText);
+            //string decompressed = Decompress(compressed, alphabet);
+
+            int numOfBytes = compressed.Length / 8;
+            byte[] bytesArray = new byte[numOfBytes];
+            for (int i = 0; i < numOfBytes; ++i)
             {
-                fs.Write(alphabet.Select(c => (byte)c).ToArray(), 0, alphabet.Select(c => (byte)c).ToArray().Length);
-                byte[] compressedByteArray = new byte[compressed.Count * sizeof(int)];
-                Buffer.BlockCopy(compressed.ToArray(), 0, compressedByteArray, 0, compressedByteArray.Length);
-                fs.Write(compressedByteArray, 0, compressedByteArray.Length);
+                bytesArray[i] = Convert.ToByte(compressed.Substring(8 * i, 8), 2);
             }
-
-            Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(allText, compressed).ToString());
-            Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
+            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, compressedFileName)))
+            {
+                fs.Write(bytesArray, 0, bytesArray.Length);
+            }
+            var compressedFromFileBytes= File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, compressedFileName));
+            string decompressed = Decompress(compressedFromFileBytes);
+            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, decompressedFileName)))
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(decompressed);
+                fs.Write(bytes, 0, bytes.Length);
+            }
+            Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(allText.Length, bytesArray.Length).ToString());
+            Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, sourceFileName),
                 Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());
             Console.WriteLine("Source BitRate: " + BitRate.Calculate(allText).ToString());
-            Console.WriteLine("Coded BitRate: " + BitRate.Calculate(allText, compressed).ToString());
-            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(allText, compressed).ToString());
-            Console.WriteLine("Saving Percentage (File): " + SavingPercentage.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
+            Console.WriteLine("Coded BitRate: " + BitRate.Calculate(allText.Length, compressed.Length).ToString());
+            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(allText.Length, bytesArray.Length).ToString());
+            Console.WriteLine("Saving Percentage (File): " + SavingPercentage.CalculateFile(Path.Combine(Environment.CurrentDirectory, sourceFileName),
                 Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString() + "%");
         }
 
-        public static (List<char>, List<int>) Compress(string uncompressed)
+        public static string Compress(string uncompressed)
         {
-            // build the dictionary
-            var alphabet = uncompressed.ToList().Distinct().ToList();
             Dictionary<string, int> dictionary = new Dictionary<string, int>();
-            int i = 0;
-            foreach (char c in alphabet)
+            for (int i = 0; i < 256; i++)
             {
-                dictionary.Add((c).ToString(), i);
-                i++;
+                dictionary.Add(Encoding.Default.GetString(new byte[1] { Convert.ToByte(i) }), i);
             }
-
 
             string w = string.Empty;
             List<int> compressed = new List<int>();
-
+            StringBuilder sb = new StringBuilder();
             foreach (char c in uncompressed)
             {
+
                 string wc = w + c;
                 if (dictionary.ContainsKey(wc))
                 {
@@ -58,54 +67,70 @@ namespace LZWCoding
                 }
                 else
                 {
-                    // write w to output
                     compressed.Add(dictionary[w]);
-                    // wc is a new sequence; add it to the dictionary
-                    dictionary.Add(wc, dictionary.Count);
-                    w = c.ToString();
+                    sb.Append(CompressToBit(dictionary[w], dictionary.Count));
+                    if (dictionary.Count < 4096)
+                    {
+                        dictionary.Add(wc, dictionary.Count);
+                    }
+                w = c.ToString();
                 }
+
             }
 
             // write remaining output if necessary
             if (!string.IsNullOrEmpty(w))
+            {
                 compressed.Add(dictionary[w]);
-
-            return (alphabet, compressed);
+                sb.Append(CompressToBit(dictionary[w], dictionary.Count));
+            }
+            var result = sb.ToString();
+            result += new string( '0', 8 - (result.Length % 8));
+            return result;
         }
 
-
-        public static string Decompress(List<int> compressed, List<char> alphabet)
+        public static string CompressToBit(int value, int dictionaryLength)
         {
-            // build the dictionary
+            var power= (int)Math.Ceiling(Math.Log(dictionaryLength, 2));
+            var str = Convert.ToString(value, 2).PadLeft(power, '0');
+            return str;
+        }
+
+        public static string Decompress(byte[] compressed)
+        {
+            var binaryStr =string.Join("", compressed.Select(x=> Convert.ToString(x, 2).PadLeft(8, '0')));
             Dictionary<int, string> dictionary = new Dictionary<int, string>();
-            int i = 0;
-            foreach (char c in alphabet)
+            for (int i = 0; i < 256; i++)
             {
-                dictionary.Add(i, (c).ToString());
-                i++;
+                dictionary.Add(i, Encoding.Default.GetString(new byte[1] { Convert.ToByte(i) }));
             }
-            string w = dictionary[compressed[0]];
-            compressed.RemoveAt(0);
+            var temp = binaryStr.Substring(0, 8);
+            binaryStr = binaryStr.Substring(8, binaryStr.Length - 8);
+            var w = dictionary[Convert.ToInt32(temp, 2)];
             StringBuilder decompressed = new StringBuilder(w);
-
-            foreach (int k in compressed)
+            int countBitRead = 8;
+            while (binaryStr.Length >=8) 
             {
-                string entry = null;
-                if (dictionary.ContainsKey(k))
-                    entry = dictionary[k];
-                else if (k == dictionary.Count)
-                    entry = w + w[0];
+                if((Math.Ceiling(Math.Log(dictionary.Count, 2)) == Math.Log(dictionary.Count, 2)))
+                {
+                    countBitRead++;
+                }
+                temp= binaryStr.Substring(0, countBitRead);
+                binaryStr = binaryStr.Substring(countBitRead, binaryStr.Length - countBitRead);
+                string c = dictionary[Convert.ToInt32(temp, 2)];
+                decompressed.Append(c);
+                w += c[0];
+                if (!dictionary.Any(x => x.Value.Equals(w))){
+                    dictionary[dictionary.Count] = w;
+                    w=c;
+                }
 
-                decompressed.Append(entry);
-
-                // new sequence; add it to the dictionary
-                dictionary.Add(dictionary.Count, w + entry[0]);
-
-                w = entry;
             }
 
             return decompressed.ToString();
         }
+         
+      
 
     }
 
