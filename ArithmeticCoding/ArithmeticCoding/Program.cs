@@ -12,10 +12,11 @@ namespace ArithmeticCoding
     {
         static void Main(string[] args)
         {
-            string source = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "reaL_text.txt"), Encoding.Default);
-            (string compressed, Dictionary<char, ProbabilityInterval> probabilityIntervals) = Coding(source);
+            string source = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "Test1.txt"), Encoding.Default);
+            (string compressed, Dictionary<char, ProbabilityInterval> probabilityIntervals) =  ArithmeticCoder.Coding(source);
+            string decompressed =  ArithmeticCoder.Decoding(compressed, probabilityIntervals, source.Length);
 
-            string azaza = Decoding(compressed, probabilityIntervals);
+            //string azaza = Decoding(compressed, probabilityIntervals);
             Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(source, compressed).ToString());
             //Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
             //    Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());
@@ -29,7 +30,7 @@ namespace ArithmeticCoding
 
         public static (string, Dictionary<char, ProbabilityInterval>) Coding(string source)
         {
-            int buffCount = 20;
+            int buffCount = 5;
             string lowStr = new string('0', buffCount);
             string highStr = new string('9', buffCount);
             var probabilityIntervals = GetProbabilityIntervals(source);
@@ -147,8 +148,8 @@ namespace ArithmeticCoding
                     Symbol = f.Key,
                     Frequency = f.Value,
                     Probability = ((float)f.Value) / source.Length,
-                    IntervalMin = tempValue,
-                    IntervalMax = tempValue + ((float)f.Value) / source.Length
+                    //IntervalMin = tempValue,
+                    //IntervalMax = tempValue + ((float)f.Value) / source.Length
                 });
                 tempValue = tempValue + ((float)f.Value) / source.Length;
             }
@@ -158,12 +159,4 @@ namespace ArithmeticCoding
 
     }
 
-    public class ProbabilityInterval
-    {
-        public char Symbol { get; set; }
-        public int Frequency { get; set; }
-        public float Probability { get; set; }
-        public float IntervalMin { get; set; }
-        public float IntervalMax { get; set; }
-    }
 }

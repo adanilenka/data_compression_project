@@ -11,7 +11,7 @@ namespace LZWCoding
     {
         static void Main(string[] args)
         {
-            string sourceFileName = "filtered_passwords.txt";
+            string sourceFileName = "test.txt";
             string compressedFileName = "CompressedFile.txt";
             string decompressedFileName = "DecompressedFile.txt";
             string allText = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, sourceFileName), Encoding.Default);
@@ -73,7 +73,7 @@ namespace LZWCoding
                     {
                         dictionary.Add(wc, dictionary.Count);
                     }
-                w = c.ToString();
+                    w = c.ToString();
                 }
 
             }
