@@ -11,7 +11,8 @@ namespace ArithmeticCoding
         public static (string , Dictionary<char, ProbabilityInterval>) Coding(string source)
         {
             //source = "1321";
-            int buffCount =8;
+            int buffCount = 30;
+            int n = buffCount - 2;
             string lowStr = new string('0', buffCount);
             string highStr = new string('1', buffCount);
             var probabilityIntervals = GetProbabilityIntervals(source);
@@ -37,14 +38,16 @@ namespace ArithmeticCoding
 
             StringBuilder codedString = new StringBuilder();
             int Lcounter = 0;
+            //int divNum = Convert.ToInt32(Math.Pow(2, buffCount));
+            int divProb = Convert.ToInt32(Math.Pow(2, n));
             for (int i = 0; i < source.Length; i++)
             {
                 double low = Convert.ToInt32(lowStr, 2);
                 double high = Convert.ToInt32(highStr, 2);
                 double range = high - low + 1;
 
-                high =Math.Floor(low +  range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMax)/(source.Length * Math.Pow(2, buffCount)))) -1;
-                low = Math.Floor(low + range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMin )/( source.Length *Math.Pow(2, buffCount))));
+                high =Math.Floor(low +  range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMax)/(divProb))) -1;
+                low = Math.Floor(low + range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMin )/(divProb)));
                 highStr = Convert.ToString(Convert.ToInt32(high), 2).PadLeft(buffCount, '0');
                 lowStr = Convert.ToString(Convert.ToInt32(low), 2).PadLeft(buffCount, '0');
                 while ((lowStr[0] == highStr[0])||((lowStr[1] == '1') && (highStr[1] == '0')))
@@ -71,20 +74,27 @@ namespace ArithmeticCoding
                     }
 
                 }
-               
+                //Console.WriteLine("Current state: ");
+                //Console.WriteLine("Iteration: " + i.ToString());
+                //Console.WriteLine("Coding symbol: " + source[i]);
+                //Console.WriteLine("Lower bound: " + lowStr + "or " + low.ToString());
+                //Console.WriteLine("Higher bound: " + highStr + "or " + high.ToString());
+
             }
             var result = codedString.ToString();
-            result += new string('0', buffCount - (result.Length % buffCount));
+            result += lowStr.Substring(1,1);//, buffCount - (result.Length % buffCount));
             if (Lcounter > 0)
             {
-                result += new string('1', Lcounter) + new string('0',buffCount-Lcounter); 
+                result += new string('1', Lcounter); 
             }
+            result += new string('1', buffCount - (result.Length % buffCount));
             return (result, probabilityIntervals);
         }
 
         public static string Decoding(string coded, Dictionary<char, ProbabilityInterval> probabilityIntervals, int sourceLength)
         {
-            int buffCount = 8;
+            int buffCount = 30;
+            int n = buffCount - 2;
             string lowStr = new string('0', buffCount);
             string highStr = new string('1', buffCount);
             StringBuilder decodedString = new StringBuilder();
@@ -93,28 +103,42 @@ namespace ArithmeticCoding
             double low = Convert.ToInt32(lowStr, 2);
             double high = Convert.ToInt32(highStr, 2);
             int pointer = 0;
-            while (pointer<=coded.Length-buffCount )
+            int foundChars = 0;
+            //int divNum = Convert.ToInt32(Math.Pow(2, buffCount));
+            int divProb = Convert.ToInt32(Math.Pow(2, n));
+            while (foundChars < sourceLength )
             {
                 low = Convert.ToInt32(lowStr, 2);
                 high = Convert.ToInt32(highStr, 2);
                 double encodedValue = Convert.ToInt32(encodedValueStr, 2);
                 double range = high - low + 1;
-                double encoded = Convert.ToInt32((encodedValue - low) / (range) * sourceLength);
+                double encoded = Convert.ToInt32((encodedValue - low) / (range) * divProb);
                 var x = probabilityIntervals.Where(pi => pi.Value.IntervalMin <= encoded && encoded < pi.Value.IntervalMax).FirstOrDefault() ;
                 decodedString.Append(x.Key);
-                high = Math.Floor(low + range * (Convert.ToDouble(x.Value.IntervalMax) / (sourceLength * Math.Pow(2, buffCount))) - 1);
-                low = Math.Floor(low + range * (Convert.ToDouble(x.Value.IntervalMin) / (sourceLength * Math.Pow(2, buffCount))));
+                foundChars++;
+                if (x.Value == null)
+                {
+                    break;
+                }
+                high = Math.Floor(low + range * (Convert.ToDouble(x.Value.IntervalMax) / (divProb)) - 1);
+                low = Math.Floor(low + range * (Convert.ToDouble(x.Value.IntervalMin) / (divProb)));
                 highStr = Convert.ToString(Convert.ToInt32(high), 2).PadLeft(buffCount, '0');
                 lowStr = Convert.ToString(Convert.ToInt32(low), 2).PadLeft(buffCount, '0');
                 while (((lowStr[0] == highStr[0]) || ((lowStr[1] == '1') && (highStr[1] == '0'))))
                 {
+                    pointer++;
+                    if (coded.Substring(pointer).Length < buffCount)
+                    {
+                        encodedValueStr = coded.Substring(pointer).PadRight(buffCount, '0');
+                    }
+                    else
+                    {
+                        encodedValueStr = coded.Substring(pointer, buffCount);
+                    }
                     if (lowStr[0] == highStr[0])
                     {
-
                         lowStr = lowStr.Substring(1, lowStr.Length - 1) + "0";
                         highStr = highStr.Substring(1, highStr.Length - 1) + "1";
-                        pointer++;
-                        encodedValueStr = coded.Substring(pointer, buffCount);
                     }
                     else if ((lowStr[1] == '1') && (highStr[1] == '0'))
                     {
@@ -122,13 +146,14 @@ namespace ArithmeticCoding
                         lowStr = (lowStr[0] == '1' ? "0" : "1") + lowStr.Substring(1, lowStr.Length - 1);
                         highStr = highStr.Substring(1, highStr.Length - 1) + "1";
                         highStr = (highStr[0] == '1' ? "0" : "1") + highStr.Substring(1, lowStr.Length - 1);
-                        pointer++;
-                        encodedValueStr = coded.Substring(pointer, buffCount);
                         encodedValueStr = (encodedValueStr[0] == '1' ? "0" : "1") + encodedValueStr.Substring(1, encodedValueStr.Length - 1);
                     }
                   
                 }
-
+                //Console.WriteLine("Current state: ");
+                //Console.WriteLine("Found symbol: " + x.Key);
+                //Console.WriteLine("Lower bound: " + lowStr + "or " + low.ToString());
+                //Console.WriteLine("Higher bound: " + highStr + "or " + high.ToString());
 
             }
             return decodedString.ToString();
@@ -137,7 +162,8 @@ namespace ArithmeticCoding
 
         public static Dictionary<char, ProbabilityInterval> GetProbabilityIntervals(string source)
         {
-            int buffCount = 8;
+            int buffCount = 30;
+            int n = buffCount - 2;
             var frequencies = new Dictionary<char, int>();
             foreach (var s in source)
             {
@@ -145,7 +171,7 @@ namespace ArithmeticCoding
                 else frequencies[s]++;
             }
             var probabilityIntervals = new Dictionary<char, ProbabilityInterval>();
-            //frequencies = frequencies.OrderBy(f => f.Key).ToDictionary(f => f.Key, f => f.Value);
+            frequencies = frequencies.OrderBy(f => f.Key).ToDictionary(f => f.Key, f => f.Value);
             //double totalSymbolCount = Convert.ToDouble(source.Length) / Math.Pow(2, 14);
             
             double tempValue = 0;
@@ -156,10 +182,10 @@ namespace ArithmeticCoding
                     Symbol = f.Key,
                     Frequency = f.Value,
                     Probability =(double)f.Value /source.Length,
-                    IntervalMin = Convert.ToInt32(Math.Round(tempValue*Math.Pow(2,buffCount))),
-                    IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2,buffCount)))),
-                    IntervalMinBin = Convert.ToString(Convert.ToInt32(Math.Round(tempValue * Math.Pow(2,buffCount))), 2).PadLeft(buffCount, '0'),
-                    IntervalMaxBin = Convert.ToString(Convert.ToInt32(Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2,buffCount))-1), 2).PadLeft(buffCount, '0'),
+                    IntervalMin = Convert.ToInt32(Math.Round(tempValue*Math.Pow(2, n))),
+                    IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n)))),
+                    IntervalMinBin = Convert.ToString(Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))), 2).PadLeft(buffCount, '0'),
+                    IntervalMaxBin = Convert.ToString(Convert.ToInt32(Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n))-1), 2).PadLeft(buffCount, '0'),
                 }) ;
                 tempValue = tempValue + (double)f.Value / source.Length;
             }

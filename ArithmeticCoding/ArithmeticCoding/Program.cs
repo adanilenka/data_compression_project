@@ -12,20 +12,39 @@ namespace ArithmeticCoding
     {
         static void Main(string[] args)
         {
-            string source = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "Test1.txt"), Encoding.Default);
+            string sourceFileName = "filtered_passwords.txt";
+            string compressedFileName = "CompressedFile.txt";
+            string decompressedFileName = "DecompressedFile.txt";
+            string source = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, sourceFileName), Encoding.Default);
             (string compressed, Dictionary<char, ProbabilityInterval> probabilityIntervals) =  ArithmeticCoder.Coding(source);
             string decompressed =  ArithmeticCoder.Decoding(compressed, probabilityIntervals, source.Length);
 
-            //string azaza = Decoding(compressed, probabilityIntervals);
-            Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(source, compressed).ToString());
-            //Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
-            //    Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());
+            int numOfBytes = compressed.Length / 8;
+            byte[] bytesArray = new byte[numOfBytes];
+            for (int i = 0; i < numOfBytes; ++i)
+            {
+                bytesArray[i] = Convert.ToByte(compressed.Substring(8 * i, 8), 2);
+            }
+            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, compressedFileName)))
+            {
+                fs.Write(bytesArray, 0, bytesArray.Length);
+            }
+            //var compressedFromFileBytes = File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, compressedFileName));
+            //var binaryCompressedStr = string.Join("", compressedFromFileBytes.Select(x => Convert.ToString(x, 2).PadLeft(8, '0')));
+            //string decompressed = Decoding(binaryCompressedStr, 4);
+            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, decompressedFileName)))
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(decompressed);
+                fs.Write(bytes, 0, bytes.Length);
+            }
+            Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(source.Length, bytesArray.Length).ToString());
+            Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, sourceFileName),
+                Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());
             Console.WriteLine("Source BitRate: " + BitRate.Calculate(source).ToString());
-            Console.WriteLine("Coded BitRate: " + BitRate.Calculate(source, compressed).ToString());
-            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(source, compressed).ToString());
-            //Console.WriteLine("Saving Percentage (File): " + SavingPercentage.CalculateFile(Path.Combine(Environment.CurrentDirectory, "Test.txt"),
-            //    Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString() + "%");
-
+            Console.WriteLine("Coded BitRate: " + BitRate.Calculate(source.Length, compressed.Length).ToString());
+            Console.WriteLine("Saving Percentage: " + SavingPercentage.Calculate(source.Length, bytesArray.Length).ToString());
+            Console.WriteLine("Saving Percentage (File): " + SavingPercentage.CalculateFile(Path.Combine(Environment.CurrentDirectory, sourceFileName),
+                Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString() + "%");
         }
 
         public static (string, Dictionary<char, ProbabilityInterval>) Coding(string source)
