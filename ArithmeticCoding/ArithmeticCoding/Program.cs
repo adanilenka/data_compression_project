@@ -12,12 +12,12 @@ namespace ArithmeticCoding
     {
         static void Main(string[] args)
         {
-            string sourceFileName = "filtered_passwords.txt";
+            string sourceFileName = "test1.txt";
             string compressedFileName = "CompressedFile.txt";
             string decompressedFileName = "DecompressedFile.txt";
             string source = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, sourceFileName), Encoding.Default);
             (string compressed, Dictionary<char, ProbabilityInterval> probabilityIntervals) =  ArithmeticCoder.Coding(source);
-            string decompressed =  ArithmeticCoder.Decoding(compressed, probabilityIntervals, source.Length);
+            //string decompressed =  ArithmeticCoder.Decoding(compressed, probabilityIntervals, source.Length);
 
             int numOfBytes = compressed.Length / 8;
             byte[] bytesArray = new byte[numOfBytes];
@@ -32,11 +32,11 @@ namespace ArithmeticCoding
             //var compressedFromFileBytes = File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, compressedFileName));
             //var binaryCompressedStr = string.Join("", compressedFromFileBytes.Select(x => Convert.ToString(x, 2).PadLeft(8, '0')));
             //string decompressed = Decoding(binaryCompressedStr, 4);
-            using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, decompressedFileName)))
-            {
-                byte[] bytes = Encoding.UTF8.GetBytes(decompressed);
-                fs.Write(bytes, 0, bytes.Length);
-            }
+            //using (FileStream fs = File.Create(Path.Combine(Environment.CurrentDirectory, decompressedFileName)))
+            //{
+            //    byte[] bytes = Encoding.UTF8.GetBytes(decompressed);
+            //    fs.Write(bytes, 0, bytes.Length);
+            //}
             Console.WriteLine("Compression Ratio: " + CompressionRatio.Calculate(source.Length, bytesArray.Length).ToString());
             Console.WriteLine("Compression Ratio (File): " + CompressionRatio.CalculateFile(Path.Combine(Environment.CurrentDirectory, sourceFileName),
                 Path.Combine(Environment.CurrentDirectory, "CompressedFile.txt")).ToString());

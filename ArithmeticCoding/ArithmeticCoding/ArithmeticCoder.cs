@@ -15,26 +15,7 @@ namespace ArithmeticCoding
             int n = buffCount - 2;
             string lowStr = new string('0', buffCount);
             string highStr = new string('1', buffCount);
-            var probabilityIntervals = GetProbabilityIntervals(source);
-            //probabilityIntervals = new Dictionary<char, ProbabilityInterval>();
-            //probabilityIntervals['1'] = new ProbabilityInterval()
-            //{
-            //    IntervalMin = 0,
-            //    IntervalMax = 40,
-            //    Symbol = '1'
-            //};
-            //probabilityIntervals['2'] = new ProbabilityInterval()
-            //{
-            //    IntervalMin = 40,
-            //    IntervalMax = 41,
-            //    Symbol = '2'
-            //};
-            //probabilityIntervals['3'] = new ProbabilityInterval()
-            //{
-            //    IntervalMin = 41,
-            //    IntervalMax = 50,
-            //    Symbol = '3'
-            //};
+            var probabilityIntervals = GetProbabilityIntervalsAdaptive(source);
 
             StringBuilder codedString = new StringBuilder();
             int Lcounter = 0;
@@ -45,7 +26,6 @@ namespace ArithmeticCoding
                 double low = Convert.ToInt32(lowStr, 2);
                 double high = Convert.ToInt32(highStr, 2);
                 double range = high - low + 1;
-
                 high =Math.Floor(low +  range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMax)/(divProb))) -1;
                 low = Math.Floor(low + range * (Convert.ToDouble(probabilityIntervals[source[i]].IntervalMin )/(divProb)));
                 highStr = Convert.ToString(Convert.ToInt32(high), 2).PadLeft(buffCount, '0');
@@ -79,6 +59,7 @@ namespace ArithmeticCoding
                 //Console.WriteLine("Coding symbol: " + source[i]);
                 //Console.WriteLine("Lower bound: " + lowStr + "or " + low.ToString());
                 //Console.WriteLine("Higher bound: " + highStr + "or " + high.ToString());
+                probabilityIntervals = RecalculatedProbabilityIntervals(probabilityIntervals, source[i]);
 
             }
             var result = codedString.ToString();
@@ -159,6 +140,69 @@ namespace ArithmeticCoding
             return decodedString.ToString();
         }
 
+        public static Dictionary<char, ProbabilityInterval> RecalculatedProbabilityIntervals(Dictionary<char, ProbabilityInterval> old, char newSymbol)
+        {
+            int buffCount = 30;
+            int n = buffCount - 2;
+            var frequencies = new Dictionary<char, int>();
+            int symbCount = 1;
+            foreach (var s in old)
+            {
+                frequencies[s.Key] = s.Value.Frequency;
+                symbCount += s.Value.Frequency;
+            }
+            frequencies[newSymbol]++;
+            var probabilityIntervals = new Dictionary<char, ProbabilityInterval>();
+            frequencies = frequencies.OrderBy(f => f.Key).ToDictionary(f => f.Key, f => f.Value);
+            double tempValue = 0;
+            foreach (var f in frequencies)
+            {
+                probabilityIntervals.Add(f.Key, new ProbabilityInterval()
+                {
+                    Symbol = f.Key,
+                    Frequency = f.Value,
+                    Probability = (double)f.Value / symbCount,
+                    IntervalMin = Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))),
+                    IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / symbCount) * Math.Pow(2, n)))),
+
+                });
+                tempValue = tempValue + (double)f.Value / symbCount;
+            }
+            return probabilityIntervals;
+        }
+
+        public static Dictionary<char, ProbabilityInterval> GetProbabilityIntervalsAdaptive(string source)
+        {
+            int buffCount = 30;
+            int n = buffCount - 2;
+            var frequencies = new Dictionary<char, int>();
+            foreach (var s in source)
+            {
+                if (!frequencies.ContainsKey(s)) frequencies[s] = 1;
+                //else frequencies[s]++;
+            }
+            var probabilityIntervals = new Dictionary<char, ProbabilityInterval>();
+            frequencies = frequencies.OrderBy(f => f.Key).ToDictionary(f => f.Key, f => f.Value);
+            //double totalSymbolCount = Convert.ToDouble(source.Length) / Math.Pow(2, 14);
+            double tempValue = 0;
+            foreach (var f in frequencies)
+            {
+                probabilityIntervals.Add(f.Key, new ProbabilityInterval()
+                {
+                    Symbol = f.Key,
+                    Frequency = f.Value,
+                    Probability =(double)f.Value / frequencies.Count,
+                    IntervalMin = Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))),
+                    IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / frequencies.Count) * Math.Pow(2, n)))),
+                    //IntervalMin = Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))),
+                    //IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n)))),
+                    //IntervalMinBin = Convert.ToString(Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))), 2).PadLeft(buffCount, '0'),
+                    //IntervalMaxBin = Convert.ToString(Convert.ToInt32(Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n))-1), 2).PadLeft(buffCount, '0'),
+                }) ;
+                tempValue = tempValue + (double)f.Value / frequencies.Count;
+            }
+            return probabilityIntervals;
+        }
 
         public static Dictionary<char, ProbabilityInterval> GetProbabilityIntervals(string source)
         {
@@ -173,7 +217,6 @@ namespace ArithmeticCoding
             var probabilityIntervals = new Dictionary<char, ProbabilityInterval>();
             frequencies = frequencies.OrderBy(f => f.Key).ToDictionary(f => f.Key, f => f.Value);
             //double totalSymbolCount = Convert.ToDouble(source.Length) / Math.Pow(2, 14);
-            
             double tempValue = 0;
             foreach (var f in frequencies)
             {
@@ -181,13 +224,15 @@ namespace ArithmeticCoding
                 {
                     Symbol = f.Key,
                     Frequency = f.Value,
-                    Probability =(double)f.Value /source.Length,
-                    IntervalMin = Convert.ToInt32(Math.Round(tempValue*Math.Pow(2, n))),
+                    Probability = (double)f.Value / source.Length,
+                    //IntervalMin = Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))),
+                    //IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / frequencies.Count) * Math.Pow(2, n)))),
+                    IntervalMin = Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))),
                     IntervalMax = Convert.ToInt32((Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n)))),
-                    IntervalMinBin = Convert.ToString(Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))), 2).PadLeft(buffCount, '0'),
-                    IntervalMaxBin = Convert.ToString(Convert.ToInt32(Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n))-1), 2).PadLeft(buffCount, '0'),
-                }) ;
-                tempValue = tempValue + (double)f.Value / source.Length;
+                    //IntervalMinBin = Convert.ToString(Convert.ToInt32(Math.Round(tempValue * Math.Pow(2, n))), 2).PadLeft(buffCount, '0'),
+                    //IntervalMaxBin = Convert.ToString(Convert.ToInt32(Math.Round((tempValue + (double)f.Value / source.Length) * Math.Pow(2, n))-1), 2).PadLeft(buffCount, '0'),
+                });
+                tempValue = tempValue + (double)f.Value /source.Length;
             }
             return probabilityIntervals;
         }
