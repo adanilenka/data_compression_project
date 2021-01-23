@@ -16,32 +16,22 @@ namespace Metrics
 
             return ((float)binSource.Length / (float)source.Length);
         }
-
-        public static float Calculate(string source, string coded)
-        {
-            var codedSource = Helpers.ConvertStringToBitString(coded);
-            return ((float)codedSource.Length / (float)source.Length);
-        }
-
-
         public static float Calculate(string source, List<int> codedArray)
         {
             var bitArray = new BitArray(codedArray.ToArray());
             return ((float)bitArray.Length / (float)source.Length);
         }
 
-
         public static float Calculate(string source, BitArray bitArray)
         {
             return ((float)bitArray.Length / (float)source.Length);
         }
 
-        public static float Calculate(int sourceLength, int compressedLength)
+        public static float Calculate(string source, string codedArray)
         {
-            return ((float)compressedLength / (float)sourceLength);
+            var binCodedArray = Helpers.ConvertStringToBitString(codedArray);
+            return ((float)binCodedArray.Length / (float)source.Length);
         }
-
-      
 
     }
 }

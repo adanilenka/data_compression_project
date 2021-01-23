@@ -22,7 +22,7 @@ namespace Metrics
             var codedSource = Helpers.ConvertStringToBitString(coded);
             return (((float)binSource.Length - (float)codedSource.Length) / (float)binSource.Length) * 100;
         }
-
+     
         public static float Calculate(int sourceCount, int codedCount)
         {
             return (((float)sourceCount- (float)codedCount) / (float)sourceCount) * 100;
@@ -32,7 +32,13 @@ namespace Metrics
         {
             var binSource = Helpers.ConvertStringToBitString(source);
             var bitCodedArray = new BitArray(coded.ToArray());
-            return (((float)binSource.Length- (float)bitCodedArray.Length) / (float)binSource.Length) * 100;
+            return (((float)binSource.Length- (float)bitCodedArray.Length) / (float)binSource.Length) * 
+                100;
+        }
+        public static float CalculateHuffmanSavingPercentage(string source, BitArray coded)
+        {
+            var binSource = Helpers.ConvertStringToBitString(source);
+            return (((float)binSource.Length - (float)coded.Length) / (float)binSource.Length)*100;
         }
     }
 }

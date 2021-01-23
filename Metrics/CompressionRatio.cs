@@ -34,6 +34,12 @@ namespace Metrics
             var bitCodedArray = new BitArray(coded.ToArray());
             return ((float)binSource.Length / (float)bitCodedArray.Length);
         }
+        public static float CalculateHuffman(string source, BitArray coded)
+        {
+            var binSource = Helpers.ConvertStringToBitString(source);
+            return ((float)binSource.Length / (float)coded.Length);
+        }
+      
 
     }
 }
